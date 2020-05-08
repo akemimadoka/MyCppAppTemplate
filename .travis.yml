@@ -1,0 +1,44 @@
+language: cpp
+os: linux
+dist: bionic
+arch:
+  - amd64
+  - arm64
+
+env:
+  - INSTALL_PREFIX=$(pwd)/Install
+
+jobs:
+  include:
+    - addons:
+        apt:
+          sources:
+            - ubuntu-toolchain-r-test
+          packages:
+            - g++-10
+      env:
+        - COMPILER_ENV="CC=gcc-10 && CXX=g++-10"
+    - addons:
+        apt:
+          sources:
+            - ubuntu-toolchain-r-test
+            - llvm-toolchain-bionic
+          packages:
+            - clang-11
+      env:
+        - COMPILER_ENV="CC=clang-11 && CXX=clang++-11"
+
+install:
+  - wget -O - https://apt.kitware.com/keys/kitware-archive-latest.asc 2>/dev/null | gpg --dearmor - | sudo tee /etc/apt/trusted.gpg.d/kitware.gpg >/dev/null
+  - sudo apt-add-repository 'deb https://apt.kitware.com/ubuntu/ bionic main'
+  - sudo apt-get update
+  - sudo apt install cmake -y
+
+before_script:
+  - eval "${COMPILER_ENV}"
+
+script:
+  - mkdir build && cd build
+  - cmake .. -DCMAKE_INSTALL_PREFIX=$INSTALL_PREFIX
+  - cmake --build . --parallel
+  - $INSTALL_PREFIX/bin/MyCppAppTemplate
